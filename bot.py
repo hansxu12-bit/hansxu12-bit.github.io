@@ -1,0 +1,44 @@
+import os
+import discord
+from discord.ext import commands
+
+# Initialize FCPC Application Intent Matrix
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Banned feline propaganda emojis
+CAT_EMOJIS = ["🐱", "🐈", "😻", "😼", "😽", "😾", "😿", "😹", "😸", "🍿"]
+
+@bot.event
+async def on_ready():
+    print(f'FCPC Automated Security System Operational. Authenticated: {bot.user}')
+
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+
+    # Scan content matrices for illegal emojis
+    if any(emoji in message.content for emoji in CAT_EMOJIS):
+        try:
+            await message.delete()
+            warning = f"🚨 **FCPC PACIFICATION ENFORCED:** {message.author.mention}, your transmission contained illegal feline propaganda. Infraction logged."
+            await message.channel.send(warning, delete_after=10)
+            
+            log_channel = discord.utils.get(message.guild.text_channels, name="logs")
+            if log_channel:
+                await log_channel.send(f"⚠️ **INFRACTION:** User {message.author} ({message.author.id}) posted banned emojis in #{message.channel.name}.")
+        except Exception as e:
+            print(f"Error handling containment: {e}")
+
+    await bot.process_commands(message)
+
+# Fetching the private token securely from cloud environment variables
+token = os.environ.get("DISCORD_TOKEN")
+if token:
+    bot.run(token)
+else:
+    print("CRITICAL EXCEPTION: DISCORD_TOKEN environment parameter is missing.")
